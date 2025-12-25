@@ -1,30 +1,26 @@
-import json, os
+import json
+import os
 from urllib.parse import urljoin
 from playwright.sync_api import Page
-
-TH_MONTH_MAP = {
-    "มกราคม": 1,
-    "กุมภาพันธ์": 2,
-    "มีนาคม": 3,
-    "เมษายน": 4,
-    "พฤษภาคม": 5,
-    "มิถุนายน": 6,
-    "กรกฎาคม": 7,
-    "สิงหาคม": 8,
-    "กันยายน": 9,
-    "ตุลาคม": 10,
-    "พฤศจิกายน": 11,
-    "ธันวาคม": 12,
-}
+from src.config.settings import FILE_PATHS, TH_MONTH_MAP, SCRAPER_CONFIG
 
 def collect_months(page: Page):
-    output_dir = "output"
-    os.makedirs(output_dir, exist_ok=True)
-    output_file = os.path.join(output_dir, "months.json")
+    """
+    Scrapes available months for each year collected in the previous stage.
+    
+    Args:
+        page (Page): Playwright page object.
+        
+    Returns:
+        None: Saves the results to a JSON file defined in settings.
+    """
+    output_file = FILE_PATHS["months"]
+    year_file = FILE_PATHS["years"]
+    
+    os.makedirs(os.path.dirname(output_file), exist_ok=True)
 
-    year_file = os.path.join(output_dir, "years.json")
     if not os.path.exists(year_file):
-        print(f"❌ ไฟล์ปี {year_file} ไม่พบ")
+        print(f"❌ ไม่พบไฟล์ปี {year_file}")
         return
 
     with open(year_file, "r", encoding="utf-8") as f:
@@ -36,20 +32,23 @@ def collect_months(page: Page):
     for y in years:
         page.goto(y["url"])
 
-        # รอ submenu เดือนของปีนั้น
-        page.wait_for_selector(
-            "div.link-list-line div.submenu ul li a[title]"
-        )
+        # Wait for the month sub-menu to load
+        try:
+            page.wait_for_selector(
+                SCRAPER_CONFIG["month_selector"],
+                timeout=SCRAPER_CONFIG["selector_timeout"]
+            )
+        except Exception:
+            print(f"⚠️ ไม่พบข้อมูลเดือนสำหรับปี {y['year']}")
+            continue
 
-        month_links = page.locator(
-            "div.link-list-line div.submenu ul li a[title]"
-        ).all()
+        month_links = page.locator(SCRAPER_CONFIG["month_selector"]).all()
 
         for a in month_links:
             month_name = a.inner_text().strip()
             month_no = TH_MONTH_MAP.get(month_name)
 
-            # ป้องกัน garbage
+            # Skip if not a valid month name
             if not month_no:
                 continue
 
@@ -68,7 +67,7 @@ def collect_months(page: Page):
                 "url": full_url
             })
 
-    # sort: ปีใหม่ → เก่า, เดือนใหม่ → เก่า
+    # Sort by year (desc) and then month number (desc)
     months.sort(
         key=lambda x: (int(x["year"]), x["month_no"]),
         reverse=True
