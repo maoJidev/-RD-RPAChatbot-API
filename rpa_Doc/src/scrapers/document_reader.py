@@ -1,3 +1,4 @@
+#src/scrapers/document_reader.py
 import json
 import os
 from urllib.parse import urljoin
@@ -91,7 +92,7 @@ def run_read_document_content(page: Page):
         documents = []
         month_documents_count = 0
 
-        for item in m.get("links", []):
+        for item in m.get("documents", []):
             total_links += 1
             print(f"   🔗 {item['url']}")
             data = read_single_document(page, item["url"], item.get("title", ""))

@@ -117,8 +117,8 @@ def run_collect_month_urls(page: Page):
             "month": m["month"],
             "month_no": m["month_no"],
             "month_url": m["url"],
-            "total_links": len(links),
-            "links": links
+            "total_documents": len(links),
+            "documents": links
         })
 
     with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
