@@ -23,7 +23,7 @@ SCRAPER_CONFIG = {
     "year_selector": "div[id^='c'] ul li a",
     "month_selector": "div[id^='c'] ul li a",
     "page_timeout": 20000,
-    "selector_timeout": 10000,
+    "selector_timeout": 15000,
     "sleep_short": (400, 800),
     "sleep_detail": (800, 1500),
     "error_sleep_sec": 3,

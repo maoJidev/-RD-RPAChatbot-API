@@ -41,6 +41,7 @@
 cd C:\inetpub\wwwroot\RPA_API
 pip install -r requirements.txt
 pip install uvicorn
+playwright install chromium
 ```
 
 ### 4. ตั้งค่าใน IIS Manager
