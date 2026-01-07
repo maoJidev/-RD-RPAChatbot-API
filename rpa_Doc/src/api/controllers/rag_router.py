@@ -18,7 +18,8 @@ def ask_question(request: QuestionRequest):
         return QuestionResponse(
             answer=answer,
             refs=last_log.get("refs", []),
-            domain=last_log.get("domain", "ทั่วไป")
+            domain=last_log.get("domain", "ทั่วไป"),
+            status=last_log.get("status", "success")
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

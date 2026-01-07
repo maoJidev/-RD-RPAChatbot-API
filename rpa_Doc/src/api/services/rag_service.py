@@ -2,7 +2,7 @@
 import requests
 from typing import List, Dict
 from datetime import datetime
-from src.config.settings import RAG_CONFIG
+from src.config.settings import RAG_CONFIG, OLLAMA_BASE_URL
 from src.repository.document_repository import DocumentRepository
 from src.repository.log_repository import LogRepository
 from sklearn.metrics.pairwise import cosine_similarity
@@ -11,9 +11,9 @@ class RAGService:
     def __init__(self):
         self.doc_repo = DocumentRepository()
         self.log_repo = LogRepository()
-        self.ollama_url = "http://localhost:11434/api/generate"
+        self.ollama_url = f"{OLLAMA_BASE_URL}/api/generate"
         self.model = RAG_CONFIG["model"]
-        self.top_k = RAG_CONFIG.get("top_k", 3)
+        self.top_k = RAG_CONFIG.get("top_k", 2)
         self.debug = True
 
     def ask_question(self, question: str) -> str:
@@ -62,6 +62,9 @@ class RAGService:
         raw_answer = self._call_ollama(prompt)
         final_answer = self._clean_answer(raw_answer)
 
+        # Determine status
+        status = "error" if final_answer.startswith("Error:") else "success"
+
         # 5. Save Log
         self.log_repo.save_log({
             "timestamp": start_time.isoformat(),
@@ -69,7 +72,8 @@ class RAGService:
             "domain": domain,
             "top_k_docs": top_k_docs_log,
             "refs": list(set(refs)),
-            "answer": final_answer
+            "answer": final_answer,
+            "status": status
         })
 
         return final_answer
@@ -82,17 +86,24 @@ class RAGService:
             f"1. ถ้าในเอกสารบอกว่า 'ได้รับยกเว้น' ให้ตอบว่ายกเว้น พร้อมบอกเงื่อนไข\n"
             f"2. ถ้าข้อมูลไม่พอ ให้ตอบตรงๆ ว่าไม่พบข้อมูลอ้างอิงที่ชัดเจน\n"
             f"3. ตอบเป็นภาษาไทยที่สุภาพ กระชับ และเป็นทางการ<|im_end|>\n"
-            f"1user\n"
+            f"<|im_start|>user\n"
             f"เอกสารอ้างอิง:\n{context}\n\n"
-            f"คำถาม: {question}"
-            f"2assistant\n"
-            f"คำตอบสรุป:"
+            f"คำถาม: {question}<|im_end|>\n"
+            f"<|im_start|>assistant\n"
         )
 
     def _call_ollama(self, prompt: str) -> str:
         try:
-            payload = {"model": self.model, "prompt": prompt, "stream": False, "options": {"temperature": 0.3}}
-            response = requests.post(self.ollama_url, json=payload, timeout=60)
+            payload = {
+                "model": self.model, 
+                "prompt": prompt, 
+                "stream": False, 
+                "options": {
+                    "temperature": 0.3,
+                    "num_ctx": 4096
+                }
+            }
+            response = requests.post(self.ollama_url, json=payload, timeout=120)
             response.raise_for_status()
             return response.json().get("response", "")
         except Exception as e:

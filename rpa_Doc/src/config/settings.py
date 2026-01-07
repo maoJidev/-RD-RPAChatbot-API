@@ -30,6 +30,9 @@ SCRAPER_CONFIG = {
     "max_docs_per_month": None,
 }
 
+# Ollama Configuration
+OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+
 RAG_CONFIG = {
     "model": "qwen3:8b",
     "top_k": 2,
