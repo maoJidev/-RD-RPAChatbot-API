@@ -81,15 +81,18 @@ class RAGService:
     def _build_prompt(self, context: str, question: str) -> str:
         return (
             f"<|im_start|>system\n"
-            f"คุณคือผู้เชี่ยวชาญด้านกฎหมายภาษีอากรของกรมสรรพากร ตอบคำถามโดยใช้ข้อมูลจาก 'เอกสารอ้างอิง' ที่ให้มาเท่านั้น\n"
-            f"กฎเหล็ก:\n"
-            f"1. ถ้าในเอกสารบอกว่า 'ได้รับยกเว้น' ให้ตอบว่ายกเว้น พร้อมบอกเงื่อนไข\n"
-            f"2. ถ้าข้อมูลไม่พอ ให้ตอบตรงๆ ว่าไม่พบข้อมูลอ้างอิงที่ชัดเจน\n"
-            f"3. ตอบเป็นภาษาไทยที่สุภาพ กระชับ และเป็นทางการ<|im_end|>\n"
+            f"คุณคือผู้เชี่ยวชาญด้านกฎหมายภาษีอากรของกรมสรรพากร หน้าที่ของคุณคือการตอบคำถามโดยใช้ข้อมูลจาก 'เอกสารอ้างอิง' ที่ได้รับเท่านั้น\n"
+            f"ข้อปฏิบัติอย่างเคร่งครัด:\n"
+            f"1. ตอบคำถามโดยอิงจากเนื้อหาใน 'เอกสารอ้างอิง' เท่านั้น ห้ามใช้ความรู้ภายนอกหรือความคิดเห็นส่วนตัว\n"
+            f"2. หากข้อมูลในเอกสารอ้างอิงไม่เพียงพอที่จะตอบคำถาม หรือไม่เกี่ยวข้อง ให้ตอบว่า 'ไม่พบข้อมูลในเอกสารอ้างอิงที่ระบุ' เท่านั้น ห้ามพยายามตอบหรือคาดเดา\n"
+            f"3. ห้ามอ้างถึงกฎหมายหรือมาตราที่ไม่มีอยู่ในเอกสารอ้างอิง\n"
+            f"4. ใช้ภาษาไทยที่เป็นทางการ สุภาพ และกระชับ\n"
+            f"<|im_end|>\n"
             f"<|im_start|>user\n"
             f"เอกสารอ้างอิง:\n{context}\n\n"
             f"คำถาม: {question}<|im_end|>\n"
             f"<|im_start|>assistant\n"
+            f"จากเอกสารอ้างอิง: " # Pre-fill start of response to encourage citation logic
         )
 
     def _call_ollama(self, prompt: str) -> str:
@@ -103,7 +106,7 @@ class RAGService:
                     "num_ctx": 4096
                 }
             }
-            response = requests.post(self.ollama_url, json=payload, timeout=120)
+            response = requests.post(self.ollama_url, json=payload, timeout=300)
             response.raise_for_status()
             return response.json().get("response", "")
         except Exception as e:

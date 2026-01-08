@@ -190,7 +190,7 @@ python -m robocorp.tasks run tasks.py -t run_all
 - **สาเหตุ**: มักเกิดจาก **RAM ไม่พอ** ทำให้ Ollama รันโมเดลไม่ไหว
 - **วิธีแก้**:
   1. แก้ไขไฟล์ `src/config/settings.py`
-  2. เปลี่ยนบรรทัด `"model": "qwen3:8b"` เป็น `"model": "qwen3:1.7b"`
+  2. เปลี่ยนบรรทัด `"model": "qwen2.5:7b"` เป็น `"model": "qwen2.5:3b"`
   3. รีสตาร์ท Server (`Ctrl+C` แล้วรัน `python main.py` ใหม่)
 
 #### 2. `TimeoutError` ขณะ Robot ทำงาน

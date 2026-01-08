@@ -22,7 +22,7 @@ SCRAPER_CONFIG = {
     "base_url": "https://www.rd.go.th/68047.html",
     "year_selector": "div[id^='c'] ul li a",
     "month_selector": "div[id^='c'] ul li a",
-    "page_timeout": 20000,
+    "page_timeout": 60000,
     "selector_timeout": 15000,
     "sleep_short": (400, 800),
     "sleep_detail": (800, 1500),
@@ -30,11 +30,11 @@ SCRAPER_CONFIG = {
     "max_docs_per_month": None,
 }
 
-# Ollama Configuration
+# Ollama Configuration (using IP Server Computer)
 OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
 
 RAG_CONFIG = {
-    "model": "qwen3:8b",
+    "model": "qwen2.5:7b",
     "top_k": 2,
     "min_similarity": 0.05,
     "strict_mode": True,
